@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+APP_DIR="$ROOT_DIR/build/TouchBarCodexToken.app"
+MACOS_DIR="$APP_DIR/Contents/MacOS"
+EXECUTABLE_PATH="$ROOT_DIR/.build/release/TouchBarCodexToken"
+MODULE_CACHE="${TMPDIR:-/tmp}/touchbar-codex-token-module-cache"
+
+cd "$ROOT_DIR"
+
+if ! swift build -c release; then
+    SDK_PATH="${SDKROOT:-$(xcrun --sdk macosx --show-sdk-path)}"
+    mkdir -p "$(dirname "$EXECUTABLE_PATH")" "$MODULE_CACHE"
+    swiftc -sdk "$SDK_PATH" \
+        -Xcc "-fmodules-cache-path=$MODULE_CACHE" \
+        Sources/*.swift \
+        -o "$EXECUTABLE_PATH"
+fi
+
+rm -rf "$APP_DIR"
+mkdir -p "$MACOS_DIR"
+cp "$EXECUTABLE_PATH" "$MACOS_DIR/TouchBarCodexToken"
+cp "Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
+codesign --force --deep --sign - "$APP_DIR" >/dev/null 2>&1 || true
+
+echo "$APP_DIR"
