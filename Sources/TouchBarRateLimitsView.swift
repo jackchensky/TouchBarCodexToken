@@ -130,12 +130,13 @@ private final class TouchBarLimitRow: NSView {
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 8
+        row.setCustomSpacing(4, after: titleLabel)
 
         addSubview(row)
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: 13),
-            titleLabel.widthAnchor.constraint(equalToConstant: 48),
+            titleLabel.widthAnchor.constraint(equalToConstant: 42),
             batteryBar.widthAnchor.constraint(equalToConstant: 175),
             batteryBar.heightAnchor.constraint(equalToConstant: 11),
             remainingLabel.widthAnchor.constraint(equalToConstant: 76),
