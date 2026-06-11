@@ -129,9 +129,10 @@ private final class TouchBarLimitRow: NSView {
         row.translatesAutoresizingMaskIntoConstraints = false
         row.orientation = .horizontal
         row.alignment = .centerY
+        row.distribution = .fill
         row.spacing = 8
         row.setCustomSpacing(4, after: titleLabel)
-        row.setCustomSpacing(2, after: remainingLabel)
+        row.setCustomSpacing(0, after: remainingLabel)
 
         addSubview(row)
 
@@ -140,10 +141,10 @@ private final class TouchBarLimitRow: NSView {
             titleLabel.widthAnchor.constraint(equalToConstant: 42),
             batteryBar.widthAnchor.constraint(equalToConstant: 175),
             batteryBar.heightAnchor.constraint(equalToConstant: 11),
-            remainingLabel.widthAnchor.constraint(equalToConstant: 76),
+            remainingLabel.widthAnchor.constraint(equalToConstant: 58),
             resetLabel.widthAnchor.constraint(equalToConstant: 82),
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
-            row.trailingAnchor.constraint(equalTo: trailingAnchor),
+            row.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
             row.topAnchor.constraint(equalTo: topAnchor),
             row.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
