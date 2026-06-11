@@ -47,7 +47,7 @@ final class TouchBarRateLimitsView: NSView {
         content.orientation = .horizontal
         content.alignment = .centerY
         content.spacing = 12
-        content.setCustomSpacing(6, after: codexIconView)
+        content.setCustomSpacing(2, after: codexIconView)
 
         addSubview(content)
 
@@ -56,8 +56,8 @@ final class TouchBarRateLimitsView: NSView {
             heightAnchor.constraint(equalToConstant: 30),
             closeButton.widthAnchor.constraint(equalToConstant: 34),
             closeButton.heightAnchor.constraint(equalToConstant: 28),
-            codexIconView.widthAnchor.constraint(equalToConstant: 32),
-            codexIconView.heightAnchor.constraint(equalToConstant: 28),
+            codexIconView.widthAnchor.constraint(equalToConstant: 34),
+            codexIconView.heightAnchor.constraint(equalToConstant: 30),
             fiveHourRow.widthAnchor.constraint(equalToConstant: 402),
             weeklyRow.widthAnchor.constraint(equalToConstant: 402),
             content.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -69,12 +69,12 @@ final class TouchBarRateLimitsView: NSView {
     private static func codexIcon() -> NSImage {
         let iconPath = "/Applications/Codex.app/Contents/Resources/icon.icns"
         if let image = NSImage(contentsOfFile: iconPath) {
-            image.size = NSSize(width: 28, height: 28)
+            image.size = NSSize(width: 30, height: 30)
             return image
         }
 
         let image = NSWorkspace.shared.icon(forFile: "/Applications/Codex.app")
-        image.size = NSSize(width: 28, height: 28)
+        image.size = NSSize(width: 30, height: 30)
         return image
     }
 }
@@ -115,7 +115,7 @@ private final class TouchBarLimitRow: NSView {
 
         titleLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
         titleLabel.textColor = .labelColor
-        titleLabel.alignment = .right
+        titleLabel.alignment = .left
 
         remainingLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
         remainingLabel.textColor = .labelColor
