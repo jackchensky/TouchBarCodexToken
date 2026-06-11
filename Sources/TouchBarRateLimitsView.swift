@@ -47,6 +47,7 @@ final class TouchBarRateLimitsView: NSView {
         content.orientation = .horizontal
         content.alignment = .centerY
         content.spacing = 12
+        content.setCustomSpacing(6, after: codexIconView)
 
         addSubview(content)
 
@@ -55,8 +56,8 @@ final class TouchBarRateLimitsView: NSView {
             heightAnchor.constraint(equalToConstant: 30),
             closeButton.widthAnchor.constraint(equalToConstant: 34),
             closeButton.heightAnchor.constraint(equalToConstant: 28),
-            codexIconView.widthAnchor.constraint(equalToConstant: 28),
-            codexIconView.heightAnchor.constraint(equalToConstant: 24),
+            codexIconView.widthAnchor.constraint(equalToConstant: 32),
+            codexIconView.heightAnchor.constraint(equalToConstant: 28),
             fiveHourRow.widthAnchor.constraint(equalToConstant: 402),
             weeklyRow.widthAnchor.constraint(equalToConstant: 402),
             content.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -68,12 +69,12 @@ final class TouchBarRateLimitsView: NSView {
     private static func codexIcon() -> NSImage {
         let iconPath = "/Applications/Codex.app/Contents/Resources/icon.icns"
         if let image = NSImage(contentsOfFile: iconPath) {
-            image.size = NSSize(width: 24, height: 24)
+            image.size = NSSize(width: 28, height: 28)
             return image
         }
 
         let image = NSWorkspace.shared.icon(forFile: "/Applications/Codex.app")
-        image.size = NSSize(width: 24, height: 24)
+        image.size = NSSize(width: 28, height: 28)
         return image
     }
 }
