@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_DIR="$ROOT_DIR/build/TouchBarCodexToken.app"
 MACOS_DIR="$APP_DIR/Contents/MacOS"
+RESOURCES_DIR="$APP_DIR/Contents/Resources"
 EXECUTABLE_PATH="$ROOT_DIR/.build/release/TouchBarCodexToken"
 MODULE_CACHE="${TMPDIR:-/tmp}/touchbar-codex-token-module-cache"
 
@@ -19,9 +20,10 @@ if ! swift build -c release; then
 fi
 
 rm -rf "$APP_DIR"
-mkdir -p "$MACOS_DIR"
+mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$EXECUTABLE_PATH" "$MACOS_DIR/TouchBarCodexToken"
 cp "Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
+cp "Resources/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 codesign --force --deep --sign - "$APP_DIR" >/dev/null 2>&1 || true
 
 echo "$APP_DIR"

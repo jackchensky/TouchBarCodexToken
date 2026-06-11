@@ -120,6 +120,23 @@ swift build -c release
 
 如果本机 Command Line Tools 的 SwiftPM SDK 探测失败，`scripts/build-app.sh` 会 fallback 到 `swiftc -sdk` 直接编译。
 
+### 重新生成 App 图标
+
+项目图标源图在 `Resources/AppIcon.png`，macOS 图标文件在 `Resources/AppIcon.icns`。
+
+```bash
+scripts/make-app-icon.py
+```
+
+脚本会为 16px、32px、64px 生成专门的小尺寸简化图标，避免 Finder 列表视图里把大图标直接缩小后变成杂色。
+
+## 更新记录
+
+### 0.1.1
+
+- 修正 Finder 列表等小尺寸场景下 App 图标显示不清楚的问题。
+- 新增 `scripts/make-app-icon.py`，用于重新生成带专门小尺寸图层的 `AppIcon.icns`。
+
 ## 隐私
 
 TouchBarCodexToken 不保存密码、API Key、授权码或账号凭据。额度数据来自本机 Codex app-server，并只显示在本机 UI 中。
