@@ -131,6 +131,7 @@ private final class TouchBarLimitRow: NSView {
         row.alignment = .centerY
         row.spacing = 8
         row.setCustomSpacing(4, after: titleLabel)
+        row.setCustomSpacing(4, after: remainingLabel)
 
         addSubview(row)
 
