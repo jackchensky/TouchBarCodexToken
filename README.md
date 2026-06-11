@@ -128,9 +128,14 @@ swift build -c release
 scripts/make-app-icon.py
 ```
 
-脚本会为 16px、32px、64px 生成专门的小尺寸简化图标，避免 Finder 列表视图里把大图标直接缩小后变成杂色。
+脚本会为 Finder 列表视图常用的小尺寸层生成专门的简化图标，并用标准 ICNS 写入器输出，避免小图标被直接缩小或被系统读成杂色噪点。
 
 ## 更新记录
+
+### 0.1.2
+
+- 修正 Finder 详情列表小图标模式下图标显示成彩色噪点的问题。
+- 调整 `scripts/make-app-icon.py`，改用 Pillow 的标准 ICNS 写入器生成兼容的小尺寸图层。
 
 ### 0.1.1
 

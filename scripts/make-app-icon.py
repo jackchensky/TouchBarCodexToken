@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import struct
-import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -79,34 +77,28 @@ def resize_source(size):
     return source.resize((size, size), Image.Resampling.LANCZOS)
 
 
-def write_icns(png_entries):
-    chunks = []
-    for code, image in png_entries:
-        with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
-            image.save(tmp.name, "PNG", optimize=True)
-            chunks.append((code.encode("ascii"), Path(tmp.name).read_bytes()))
-
-    total_length = 8 + sum(8 + len(data) for _, data in chunks)
-    with OUTPUT_PATH.open("wb") as output:
-        output.write(b"icns")
-        output.write(struct.pack(">I", total_length))
-        for code, data in chunks:
-            output.write(code)
-            output.write(struct.pack(">I", 8 + len(data)))
-            output.write(data)
+def write_icns(images):
+    base = images[1024]
+    append_images = [
+        images[32],
+        images[64],
+        images[128],
+        images[256],
+        images[512],
+    ]
+    base.save(OUTPUT_PATH, format="ICNS", append_images=append_images)
 
 
 def main():
-    entries = [
-        ("icp4", make_small_icon(16)),
-        ("icp5", make_small_icon(32)),
-        ("icp6", make_small_icon(64)),
-        ("ic07", resize_source(128)),
-        ("ic08", resize_source(256)),
-        ("ic09", resize_source(512)),
-        ("ic10", resize_source(1024)),
-    ]
-    write_icns(entries)
+    images = {
+        32: make_small_icon(32),
+        64: make_small_icon(64),
+        128: resize_source(128),
+        256: resize_source(256),
+        512: resize_source(512),
+        1024: resize_source(1024),
+    }
+    write_icns(images)
     print(OUTPUT_PATH)
 
 
