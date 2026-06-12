@@ -2,6 +2,8 @@
 
 TouchBarCodexToken 是一个 macOS 菜单栏 + 桌面 HUD 小工具，用本机 Codex app-server 读取 Codex 额度，并把 5 小时额度和周额度显示在桌面小浮窗和 Touch Bar 上。
 
+![TouchBarCodexToken 宣传图](Marketing/promo-style-d-tech-board.png)
+
 它不抓网页，也不需要你填写 API Key。应用会启动本机：
 
 ```bash
