@@ -25,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, RateLimitStoreDelegate
         store.delegate = self
         configureStatusItem()
         configureLifecycleMonitor()
+        CodexAutoLauncher.installOrUpdate()
+        CodexAutoLauncher.clearManualQuitLock()
 
         lifecycleMonitor.start()
 
@@ -239,6 +241,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, RateLimitStoreDelegate
     }
 
     private func quitApp() {
+        CodexAutoLauncher.markManualQuit()
         hudWindow.orderOut(nil)
         lifecycleMonitor.stop()
         store.stop()

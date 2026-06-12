@@ -21,6 +21,7 @@ account/rateLimits/read
 - Touch Bar：点击 HUD 后尝试显示两行分段电量条。
 - 同步状态：菜单栏、HUD 和 Touch Bar 使用同一份额度状态。
 - 自动联动 Codex：检测到 Codex 启动后显示 HUD，Codex 退出后自动退出。
+- 自动拉起：首次运行 app 后会注册本机 LaunchAgent，之后 Codex 启动时自动打开额度条。
 - 刷新保护：刷新失败时保留旧数据，不清空已有额度。
 - 外观设置：菜单栏里可修改 HUD 颜色和透明度。
 - 本地优先：只调用本机 Codex app-server，不保存账号、密钥或授权码。
@@ -95,6 +96,14 @@ build/TouchBarCodexToken.app
 open build/TouchBarCodexToken.app
 ```
 
+首次运行后，应用会在当前用户的 `~/Library/LaunchAgents` 下注册一个轻量启动器：
+
+```text
+com.jackchen.TouchBarCodexToken.CodexLauncher.plist
+```
+
+它每 5 秒检查一次 Codex 是否正在运行。如果 Codex 已启动而额度条未运行，就自动打开 `TouchBarCodexToken.app`。如果你在 Codex 仍运行时手动退出额度条，本轮 Codex 会话内不会被自动拉起；Codex 完全退出后会清除这个手动退出状态。
+
 ### 方式二：开发期直接运行
 
 ```bash
@@ -131,6 +140,10 @@ scripts/make-app-icon.py
 脚本会为 Finder 列表视图常用的小尺寸层生成专门的简化图标，并用标准 ICNS 写入器输出，避免小图标被直接缩小或被系统读成杂色噪点。
 
 ## 更新记录
+
+### 开发中
+
+- 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
 
 ### 0.1.2
 
