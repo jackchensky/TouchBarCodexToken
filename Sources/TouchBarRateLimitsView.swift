@@ -18,8 +18,8 @@ final class TouchBarRateLimitsView: NSView {
     }
 
     func update(with state: RateLimitDisplayState) {
-        fiveHourRow.update(with: state.fiveHour)
-        weeklyRow.update(with: state.weekly)
+        fiveHourRow.update(with: state.fiveHour, usageText: state.tokenUsage?.yesterdayText)
+        weeklyRow.update(with: state.weekly, usageText: state.tokenUsage?.cumulativeText)
     }
 
     private func configure() {
@@ -52,14 +52,14 @@ final class TouchBarRateLimitsView: NSView {
         addSubview(content)
 
         NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: 520),
+            widthAnchor.constraint(equalToConstant: 620),
             heightAnchor.constraint(equalToConstant: 30),
             closeButton.widthAnchor.constraint(equalToConstant: 34),
             closeButton.heightAnchor.constraint(equalToConstant: 28),
             codexIconView.widthAnchor.constraint(equalToConstant: 34),
             codexIconView.heightAnchor.constraint(equalToConstant: 30),
-            fiveHourRow.widthAnchor.constraint(equalToConstant: 402),
-            weeklyRow.widthAnchor.constraint(equalToConstant: 402),
+            fiveHourRow.widthAnchor.constraint(equalToConstant: 502),
+            weeklyRow.widthAnchor.constraint(equalToConstant: 502),
             content.leadingAnchor.constraint(equalTo: leadingAnchor),
             content.trailingAnchor.constraint(equalTo: trailingAnchor),
             content.centerYAnchor.constraint(equalTo: centerYAnchor)
@@ -95,19 +95,21 @@ private final class TouchBarLimitRow: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(with meter: LimitMeter?) {
+    func update(with meter: LimitMeter?, usageText: String?) {
+        let usageText = usageText ?? defaultUsageText
+
         guard let meter else {
             batteryBar.remainingPercent = 0
             batteryBar.isDimmed = true
             remainingLabel.stringValue = "剩余 --"
-            resetLabel.stringValue = "-- 重置"
+            resetLabel.stringValue = "-- 重置  |  \(usageText)"
             return
         }
 
         batteryBar.remainingPercent = meter.remainingPercent
         batteryBar.isDimmed = false
         remainingLabel.stringValue = "剩余 \(meter.remainingText)"
-        resetLabel.stringValue = meter.resetText
+        resetLabel.stringValue = "\(meter.resetText)  |  \(usageText)"
     }
 
     private func configure() {
@@ -142,11 +144,15 @@ private final class TouchBarLimitRow: NSView {
             batteryBar.widthAnchor.constraint(equalToConstant: 175),
             batteryBar.heightAnchor.constraint(equalToConstant: 11),
             remainingLabel.widthAnchor.constraint(equalToConstant: 58),
-            resetLabel.widthAnchor.constraint(equalToConstant: 82),
+            resetLabel.widthAnchor.constraint(equalToConstant: 190),
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
             row.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
             row.topAnchor.constraint(equalTo: topAnchor),
             row.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+    }
+
+    private var defaultUsageText: String {
+        titleLabel.stringValue == "5 小时" ? "昨日 --" : "累计 --"
     }
 }

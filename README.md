@@ -28,6 +28,29 @@ account/rateLimits/read
 - 外观设置：菜单栏里可修改 HUD 颜色和透明度。
 - 本地优先：只调用本机 Codex app-server，不保存账号、密钥或授权码。
 
+## 兼容性
+
+### Mac 机型
+
+| 机型 | 支持情况 | 说明 |
+| --- | --- | --- |
+| Intel Mac | 支持 | 当前发布的 DMG 是 `x86_64` 构建，适合 Intel 芯片 Mac，包括 2016-2019 款带 Touch Bar 的 MacBook Pro。 |
+| Apple Silicon Mac | 支持 | M1 / M2 / M3 / M4 系列 Mac 可通过 Rosetta 2 运行当前 Intel 版应用；首次打开时系统可能提示安装 Rosetta。 |
+| 无 Touch Bar 的 Mac | 支持 | 桌面 HUD 和菜单栏额度显示可以正常使用，只是不会显示 Touch Bar 额度条。 |
+
+### Touch Bar
+
+Touch Bar 不是必需硬件。
+
+- 有 Touch Bar 的 Mac：可以使用桌面 HUD、菜单栏和 Touch Bar 额度条。
+- 没有 Touch Bar 的 Mac：可以正常使用桌面 HUD 和菜单栏，Touch Bar 相关功能会自然不可见。
+
+### 系统和依赖
+
+- macOS 11 Big Sur 或更新版本。
+- 已安装 `/Applications/Codex.app`。
+- 本机 Codex app-server 可用。
+
 ## 界面
 
 HUD 默认是一个小胶囊浮窗，放在屏幕上方附近：
@@ -128,10 +151,7 @@ swift run
 
 ## 要求
 
-- macOS 11 或更新版本。
-- 已安装 `/Applications/Codex.app`。
-- 本机 Codex app-server 可用。
-- 需要 Touch Bar 的 Mac 才能看到 Touch Bar 视图；没有 Touch Bar 的机器仍可使用桌面 HUD 和菜单栏。
+见上方“兼容性”章节。
 
 ## 构建说明
 
@@ -161,6 +181,7 @@ scripts/make-app-icon.py
 
 - 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
 - 新增 `scripts/package-dmg.sh`，可生成用于分享安装的 DMG。
+- README 增加 Intel Mac、Apple Silicon Mac、无 Touch Bar Mac 的兼容性说明。
 
 ### 0.1.2
 

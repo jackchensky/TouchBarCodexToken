@@ -88,6 +88,7 @@ final class RateLimitStore {
 
         state.fiveHour = windows.fiveHour
         state.weekly = windows.weekly
+        state.tokenUsage = LocalTokenUsageReader.read()
         state.isRefreshing = false
         state.lastUpdated = Date()
         state.errorMessage = nil

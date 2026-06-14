@@ -70,6 +70,7 @@ struct LimitMeter: Equatable {
 struct RateLimitDisplayState: Equatable {
     var fiveHour: LimitMeter?
     var weekly: LimitMeter?
+    var tokenUsage: TokenUsageSummary?
     var isRefreshing: Bool
     var lastUpdated: Date?
     var errorMessage: String?
@@ -77,6 +78,7 @@ struct RateLimitDisplayState: Equatable {
     static let initial = RateLimitDisplayState(
         fiveHour: nil,
         weekly: nil,
+        tokenUsage: nil,
         isRefreshing: false,
         lastUpdated: nil,
         errorMessage: nil
@@ -98,5 +100,38 @@ struct RateLimitDisplayState: Equatable {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return "上次更新 \(formatter.string(from: lastUpdated))"
+    }
+}
+
+struct TokenUsageSummary: Equatable {
+    let yesterdayTokens: Int
+    let cumulativeTokens: Int
+
+    var yesterdayText: String {
+        "昨日 \(Self.formatAsWan(yesterdayTokens))"
+    }
+
+    var cumulativeText: String {
+        "累计 \(Self.formatAsYi(cumulativeTokens))"
+    }
+
+    private static func formatAsWan(_ tokens: Int) -> String {
+        let value = Double(tokens) / 10_000
+        return "\(formatted(value)) 万"
+    }
+
+    private static func formatAsYi(_ tokens: Int) -> String {
+        let value = Double(tokens) / 100_000_000
+        return "\(formatted(value)) 亿"
+    }
+
+    private static func formatted(_ value: Double) -> String {
+        if value >= 100 {
+            return String(format: "%.0f", value)
+        }
+        if value >= 10 {
+            return String(format: "%.1f", value)
+        }
+        return String(format: "%.2f", value)
     }
 }
