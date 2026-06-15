@@ -4,6 +4,10 @@ TouchBarCodexToken 是一个 macOS 菜单栏 + 桌面 HUD 小工具，用本机 
 
 ![TouchBarCodexToken 宣传图](Marketing/promo-style-d-tech-board.png)
 
+Touch Bar 清晰细节：
+
+![Touch Bar 清晰细节](Marketing/promo-touchbar-upgrade-detail.png)
+
 它不抓网页，也不需要你填写 API Key。应用会启动本机：
 
 ```bash
@@ -76,6 +80,7 @@ Touch Bar 内容包括：
 - `周限额` 分段电量条。
 - 剩余百分比。
 - 重置时间。
+- 本地 token 消耗统计：`昨日` 和 `累计`。
 
 注意：macOS 的公开 Touch Bar API 与当前前台 App / first responder 绑定。切回 Codex 输入后，Touch Bar 可能会被 Codex 自己接管，这是系统限制。
 
@@ -138,7 +143,7 @@ scripts/package-dmg.sh
 打包成功后会生成：
 
 ```text
-dist/TouchBarCodexToken-0.1.3.dmg
+dist/TouchBarCodexToken-0.1.4.dmg
 ```
 
 分享给其他人时，推荐上传这个 DMG 到 GitHub Releases。当前项目没有 Apple Developer 签名和公证，首次打开时 macOS 可能提示无法验证开发者；用户可以在 Finder 中右键点击 app，选择“打开”，再确认一次。
@@ -177,11 +182,15 @@ scripts/make-app-icon.py
 
 ## 更新记录
 
-### 开发中
+### 0.1.4
 
 - 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
 - 新增 `scripts/package-dmg.sh`，可生成用于分享安装的 DMG。
 - README 增加 Intel Mac、Apple Silicon Mac、无 Touch Bar Mac 的兼容性说明。
+- Touch Bar 增加本地 token 消耗统计，显示 `昨日` 和 `累计` 用量。
+- 重置时间统一显示为 `M月d日 HH:mm 重置`，让 5 小时额度和周额度两行更容易对齐阅读。
+- 本地 token 统计改为后台读取，避免刷新时桌面 HUD 和菜单栏短暂卡住。
+- 更新 README 宣传图，并新增一张更清晰的 Touch Bar 细节图。
 
 ### 0.1.2
 
