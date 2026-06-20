@@ -20,6 +20,11 @@ Touch Bar 清晰细节：
 account/rateLimits/read
 ```
 
+## 作者
+
+- 个人博客：[jackchen.cn](https://jackchen.cn)
+- 小红书：Jackchen
+
 ## 功能
 
 - 桌面置顶小 HUD：显示 `5h xx%`、`7d xx%`、刷新图标和退出图标。
