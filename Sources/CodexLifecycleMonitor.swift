@@ -87,10 +87,16 @@ final class CodexLifecycleMonitor {
             return true
         }
 
-        if app.bundleURL?.path == "/Applications/Codex.app" {
+        let supportedPaths = [
+            "/Applications/Codex.app",
+            "/Applications/ChatGPT.app",
+            "/Applications/GPT.app"
+        ]
+        if let path = app.bundleURL?.path, supportedPaths.contains(path) {
             return true
         }
 
-        return app.localizedName == "Codex"
+        let supportedNames = ["Codex", "ChatGPT", "GPT"]
+        return app.localizedName.map(supportedNames.contains) ?? false
     }
 }

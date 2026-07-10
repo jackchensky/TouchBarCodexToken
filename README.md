@@ -8,9 +8,11 @@ Touch Bar 清晰细节：
 
 ![Touch Bar 清晰细节](Marketing/promo-touchbar-upgrade-detail.png)
 
-它不抓网页，也不需要你填写 API Key。应用会启动本机：
+它不抓网页，也不需要你填写 API Key。应用会自动查找 ChatGPT 合并版或旧版 Codex 中的本机 `codex`：
 
 ```bash
+/Applications/ChatGPT.app/Contents/Resources/codex app-server --listen stdio://
+# 或旧版
 /Applications/Codex.app/Contents/Resources/codex app-server --listen stdio://
 ```
 
@@ -31,7 +33,7 @@ account/rateLimits/read
 - 菜单栏状态：显示 5 小时额度和周额度的剩余百分比。
 - Touch Bar：点击 HUD 后尝试显示两行分段电量条。
 - 同步状态：菜单栏、HUD 和 Touch Bar 使用同一份额度状态。
-- 自动联动 Codex：检测到 Codex 启动后显示 HUD，Codex 退出后自动退出。
+- 自动联动 Codex：检测到 ChatGPT 合并版或旧版 Codex 启动后显示 HUD，宿主应用退出后自动退出。
 - 自动拉起：首次运行 app 后会注册本机 LaunchAgent，之后 Codex 启动时自动打开额度条。
 - 刷新保护：刷新失败时保留旧数据，不清空已有额度。
 - 外观设置：菜单栏里可修改 HUD 颜色和透明度。
@@ -57,7 +59,7 @@ Touch Bar 不是必需硬件。
 ### 系统和依赖
 
 - macOS 11 Big Sur 或更新版本。
-- 已安装 `/Applications/Codex.app`。
+- 已安装 `/Applications/ChatGPT.app`（Codex 合并版）或旧版 `/Applications/Codex.app`。
 - 本机 Codex app-server 可用。
 
 ## 界面
@@ -137,7 +139,7 @@ open build/TouchBarCodexToken.app
 com.jackchen.TouchBarCodexToken.CodexLauncher.plist
 ```
 
-它每 5 秒检查一次 Codex 是否正在运行。如果 Codex 已启动而额度条未运行，就自动打开 `TouchBarCodexToken.app`。如果你在 Codex 仍运行时手动退出额度条，本轮 Codex 会话内不会被自动拉起；Codex 完全退出后会清除这个手动退出状态。
+它每 5 秒检查一次 ChatGPT 合并版或旧版 Codex 是否正在运行。如果宿主应用已启动而额度条未运行，就自动打开 `TouchBarCodexToken.app`。如果你在宿主应用仍运行时手动退出额度条，本轮会话内不会被自动拉起；宿主应用完全退出后会清除这个手动退出状态。
 
 ### 方式二：打包 DMG
 
@@ -148,7 +150,7 @@ scripts/package-dmg.sh
 打包成功后会生成：
 
 ```text
-dist/TouchBarCodexToken-0.1.4.dmg
+dist/TouchBarCodexToken-0.1.5.dmg
 ```
 
 分享给其他人时，推荐上传这个 DMG 到 GitHub Releases。当前项目没有 Apple Developer 签名和公证，首次打开时 macOS 可能提示无法验证开发者；用户可以在 Finder 中右键点击 app，选择“打开”，再确认一次。
@@ -187,13 +189,20 @@ scripts/make-app-icon.py
 
 ## 更新记录
 
+### 0.1.5
+
+- 兼容 Codex 合并到 ChatGPT 后的新应用名称和安装路径。
+- 自动启动器现在可识别 `ChatGPT`、`Codex` 和 `GPT` 进程。
+- app-server 会自动从 ChatGPT 合并版或旧版 Codex 中选择可用的本机 `codex`。
+- 应用内生命周期监听同步兼容新旧宿主，继续保持宿主启动时拉起、退出时关闭。
+
 ### 0.1.4
 
 - 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
 - 新增 `scripts/package-dmg.sh`，可生成用于分享安装的 DMG。
 - README 增加 Intel Mac、Apple Silicon Mac、无 Touch Bar Mac 的兼容性说明。
 - Touch Bar 增加本地 token 消耗统计，显示 `昨日` 和 `累计` 用量。
-- 重置时间统一显示为 `M月d日 HH:mm 重置`，让 5 小时额度和周额度两行更容易对齐阅读。
+- 重置时间统一显示为 `MM月dd日 HH:mm 重置`，让 5 小时额度和周额度两行更容易对齐阅读。
 - 本地 token 统计改为后台读取，避免刷新时桌面 HUD 和菜单栏短暂卡住。
 - 更新 README 宣传图，并新增一张更清晰的 Touch Bar 细节图。
 
