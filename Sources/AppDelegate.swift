@@ -148,9 +148,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, RateLimitStoreDelegate
             return
         }
 
-        if let fiveHour = state.fiveHour, let weekly = state.weekly {
-            button.title = " \(fiveHour.shortTitle) \(fiveHour.remainingText)  \(weekly.shortTitle) \(weekly.remainingText)"
-            button.toolTip = "Codex 额度：5 小时剩余 \(fiveHour.remainingText)，周限额剩余 \(weekly.remainingText)"
+        var titleParts: [String] = []
+        var tooltipParts: [String] = []
+
+        if let fiveHour = state.fiveHour {
+            titleParts.append("\(fiveHour.shortTitle) \(fiveHour.remainingText)")
+            tooltipParts.append("5 小时剩余 \(fiveHour.remainingText)")
+        } else if let resetCredits = state.resetCredits, resetCredits.availableCount > 0 {
+            titleParts.append("重置\(resetCredits.availableCount)")
+            tooltipParts.append("可重置 \(resetCredits.availableCount) 次，\(resetCredits.expirationText)")
+        }
+
+        if let weekly = state.weekly {
+            titleParts.append("\(weekly.shortTitle) \(weekly.remainingText)")
+            tooltipParts.append("周限额剩余 \(weekly.remainingText)")
+        }
+
+        if !titleParts.isEmpty {
+            button.title = " \(titleParts.joined(separator: "  "))"
+            button.toolTip = "Codex 额度：\(tooltipParts.joined(separator: "，"))"
         } else if state.isRefreshing {
             button.title = " ..."
             button.toolTip = "Codex 额度：正在刷新"

@@ -3,6 +3,7 @@ import Foundation
 struct GetAccountRateLimitsResponse: Codable {
     let rateLimits: RateLimitSnapshot
     let rateLimitsByLimitId: [String: RateLimitSnapshot]?
+    let rateLimitResetCredits: RateLimitResetCreditsResponse?
 }
 
 struct RateLimitSnapshot: Codable {
@@ -16,6 +17,16 @@ struct RateLimitWindow: Codable {
     let usedPercent: Double
     let windowDurationMins: Double?
     let resetsAt: Double?
+}
+
+struct RateLimitResetCreditsResponse: Codable {
+    let availableCount: Int
+    let credits: [RateLimitResetCreditResponse]?
+}
+
+struct RateLimitResetCreditResponse: Codable {
+    let status: String?
+    let expiresAt: Double?
 }
 
 struct LimitMeter: Equatable {
@@ -66,6 +77,7 @@ struct LimitMeter: Equatable {
 struct RateLimitDisplayState: Equatable {
     var fiveHour: LimitMeter?
     var weekly: LimitMeter?
+    var resetCredits: ResetCreditSummary?
     var tokenUsage: TokenUsageSummary?
     var isRefreshing: Bool
     var lastUpdated: Date?
@@ -74,6 +86,7 @@ struct RateLimitDisplayState: Equatable {
     static let initial = RateLimitDisplayState(
         fiveHour: nil,
         weekly: nil,
+        resetCredits: nil,
         tokenUsage: nil,
         isRefreshing: false,
         lastUpdated: nil,
@@ -96,6 +109,45 @@ struct RateLimitDisplayState: Equatable {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return "上次更新 \(formatter.string(from: lastUpdated))"
+    }
+}
+
+struct ResetCreditSummary: Equatable {
+    let availableCount: Int
+    let earliestExpirationDate: Date?
+
+    var compactText: String {
+        "重置 \(availableCount)次"
+    }
+
+    var availableText: String {
+        "可用 \(availableCount) 次"
+    }
+
+    var expirationText: String {
+        guard let earliestExpirationDate else {
+            return "到期 --"
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.timeZone = .current
+        formatter.dateFormat = "MM月dd日"
+        return "\(formatter.string(from: earliestExpirationDate)) 到期"
+    }
+
+    init(response: RateLimitResetCreditsResponse) {
+        availableCount = max(0, response.availableCount)
+        earliestExpirationDate = response.credits?
+            .filter { $0.status == nil || $0.status == "available" }
+            .compactMap { credit in
+                guard let value = credit.expiresAt else {
+                    return nil
+                }
+                let seconds = value > 10_000_000_000 ? value / 1000 : value
+                return Date(timeIntervalSince1970: seconds)
+            }
+            .min()
     }
 }
 

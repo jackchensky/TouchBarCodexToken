@@ -1,6 +1,6 @@
 # TouchBarCodexToken
 
-TouchBarCodexToken 是一个 macOS 菜单栏 + 桌面 HUD 小工具，用本机 Codex app-server 读取 Codex 额度，并把 5 小时额度和周额度显示在桌面小浮窗和 Touch Bar 上。
+TouchBarCodexToken 是一个 macOS 菜单栏 + 桌面 HUD 小工具，用本机 Codex app-server 读取 Codex 额度，并把额度窗口或可用重置次数显示在桌面小浮窗和 Touch Bar 上。
 
 ![TouchBarCodexToken 宣传图](Marketing/promo-style-d-tech-board.png)
 
@@ -29,8 +29,8 @@ account/rateLimits/read
 
 ## 功能
 
-- 桌面置顶小 HUD：显示 `5h xx%`、`7d xx%`、刷新图标和退出图标。
-- 菜单栏状态：显示 5 小时额度和周额度的剩余百分比。
+- 桌面置顶小 HUD：动态显示 `5h xx%`、`7d xx%` 或 `重置 x次`，并提供刷新和退出图标。
+- 菜单栏状态：根据接口实际返回显示额度窗口；只有周额度时不再重复显示成 5 小时额度。
 - Touch Bar：点击 HUD 后尝试显示两行分段电量条。
 - 同步状态：菜单栏、HUD 和 Touch Bar 使用同一份额度状态。
 - 自动联动 Codex：检测到 ChatGPT 合并版或旧版 Codex 启动后显示 HUD，宿主应用退出后自动退出。
@@ -70,6 +70,14 @@ HUD 默认是一个小胶囊浮窗，放在屏幕上方附近：
 ● 5h 85%   ● 7d 80%   ↻   ×
 ```
 
+如果当前账号只返回周额度，同时拥有可用的完整重置次数，则显示为：
+
+```text
+● 重置 3次   ● 7d 96%   ↻   ×
+```
+
+如果没有可用重置次数，则只显示周额度并自动收窄浮窗。
+
 - `↻`：刷新额度。
 - `×`：退出应用。
 - 状态点为绿色、黄色或红色，表示剩余额度充足、偏低或较低。
@@ -83,7 +91,7 @@ HUD 默认是一个小胶囊浮窗，放在屏幕上方附近：
 Touch Bar 内容包括：
 
 - Codex 官方图标。
-- `5 小时` 额度分段电量条。
+- `5 小时` 额度分段电量条；窗口不存在时改为显示可用重置次数和最早到期日期。
 - `周限额` 分段电量条。
 - 剩余百分比。
 - 重置时间。
@@ -150,7 +158,7 @@ scripts/package-dmg.sh
 打包成功后会生成：
 
 ```text
-dist/TouchBarCodexToken-0.1.5.dmg
+dist/TouchBarCodexToken-0.1.6.dmg
 ```
 
 分享给其他人时，推荐上传这个 DMG 到 GitHub Releases。当前项目没有 Apple Developer 签名和公证，首次打开时 macOS 可能提示无法验证开发者；用户可以在 Finder 中右键点击 app，选择“打开”，再确认一次。
@@ -189,32 +197,51 @@ scripts/make-app-icon.py
 
 ## 更新记录
 
-### 0.1.5
+### 0.1.6 - 2026-07-18
+
+- 适配只返回周额度的新账号结构，不再把同一份周额度重复显示成 `5h`。
+- 没有 5 小时窗口时，HUD、菜单栏和 Touch Bar 动态显示可用完整重置次数。
+- 没有可用重置次数时只显示周额度，并自动收窄 HUD。
+- 修复 Codex 合并到 ChatGPT 后 Touch Bar 左侧官方图标不显示的问题，优先使用白底 Codex 官方图标。
+- Touch Bar 的到期/重置文字、`|` 分隔线和昨日/累计用量改为固定列，上下两行保持对齐。
+- HUD 小幅加宽，避免 `5h 100%` 与 `7d 100%` 同时显示时百分号被遮挡。
+
+### 0.1.5 - 2026-07-10
 
 - 兼容 Codex 合并到 ChatGPT 后的新应用名称和安装路径。
 - 自动启动器现在可识别 `ChatGPT`、`Codex` 和 `GPT` 进程。
 - app-server 会自动从 ChatGPT 合并版或旧版 Codex 中选择可用的本机 `codex`。
 - 应用内生命周期监听同步兼容新旧宿主，继续保持宿主启动时拉起、退出时关闭。
 
-### 0.1.4
+### 0.1.4 - 2026-06-16
 
-- 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
-- 新增 `scripts/package-dmg.sh`，可生成用于分享安装的 DMG。
 - README 增加 Intel Mac、Apple Silicon Mac、无 Touch Bar Mac 的兼容性说明。
 - Touch Bar 增加本地 token 消耗统计，显示 `昨日` 和 `累计` 用量。
 - 重置时间统一显示为 `MM月dd日 HH:mm 重置`，让 5 小时额度和周额度两行更容易对齐阅读。
 - 本地 token 统计改为后台读取，避免刷新时桌面 HUD 和菜单栏短暂卡住。
 - 更新 README 宣传图，并新增一张更清晰的 Touch Bar 细节图。
 
-### 0.1.2
+### 0.1.3 - 2026-06-13
+
+- 新增 LaunchAgent 启动器，首次运行后可在 Codex 启动时自动打开额度条。
+- 新增 `scripts/package-dmg.sh`，可生成用于分享安装的 DMG。
+- README 加入第一版项目宣传图。
+
+### 0.1.2 - 2026-06-11
 
 - 修正 Finder 详情列表小图标模式下图标显示成彩色噪点的问题。
 - 调整 `scripts/make-app-icon.py`，改用 Pillow 的标准 ICNS 写入器生成兼容的小尺寸图层。
 
-### 0.1.1
+### 0.1.1 - 2026-06-11
 
 - 修正 Finder 列表等小尺寸场景下 App 图标显示不清楚的问题。
 - 新增 `scripts/make-app-icon.py`，用于重新生成带专门小尺寸图层的 `AppIcon.icns`。
+
+### 0.1.0 - 2026-06-10
+
+- 首次开源发布 Swift/AppKit 菜单栏、桌面 HUD 和 Touch Bar 应用。
+- 通过本机 Codex app-server 读取 5 小时额度和周额度，不抓网页、不需要 API Key。
+- 菜单栏、HUD 和 Touch Bar 使用同一份额度状态，并支持刷新失败时保留旧数据。
 
 ## 隐私
 

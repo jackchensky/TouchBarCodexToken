@@ -1,7 +1,7 @@
 import AppKit
 
 final class CompactHUDPanel: NSPanel {
-    private let defaultSize = NSSize(width: 226, height: 34)
+    private let defaultSize = NSSize(width: 238, height: 34)
     private var hasPositionedInitialFrame = false
 
     init(contentViewController: NSViewController) {

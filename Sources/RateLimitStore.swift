@@ -91,6 +91,7 @@ final class RateLimitStore {
 
         state.fiveHour = windows.fiveHour
         state.weekly = windows.weekly
+        state.resetCredits = response.rateLimitResetCredits.map(ResetCreditSummary.init)
         state.isRefreshing = false
         state.lastUpdated = Date()
         state.errorMessage = nil
@@ -101,19 +102,29 @@ final class RateLimitStore {
     private func classifyWindows(primary: RateLimitWindow?, secondary: RateLimitWindow?) -> (fiveHour: LimitMeter?, weekly: LimitMeter?) {
         let candidates = [primary, secondary].compactMap { $0 }
 
-        let fiveHourWindow = candidates.first { window in
+        var fiveHourWindow = candidates.first { window in
             guard let duration = window.windowDurationMins else {
                 return false
             }
             return abs(duration - 300) < 30
-        } ?? primary
+        }
 
-        let weeklyWindow = candidates.first { window in
+        var weeklyWindow = candidates.first { window in
             guard let duration = window.windowDurationMins else {
                 return false
             }
             return duration >= 7 * 24 * 60 - 60
-        } ?? secondary
+        }
+
+        // Older app-server versions relied on primary/secondary ordering and did
+        // not always include durations. Only use that fallback when two distinct
+        // windows are present, so a weekly-only window is never duplicated as 5h.
+        if primary != nil, secondary != nil {
+            fiveHourWindow = fiveHourWindow ?? primary
+            weeklyWindow = weeklyWindow ?? secondary
+        } else if fiveHourWindow == nil, weeklyWindow == nil {
+            weeklyWindow = primary ?? secondary
+        }
 
         let fiveHour = fiveHourWindow.map {
             LimitMeter(title: "5 小时", shortTitle: "5h", window: $0)

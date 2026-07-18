@@ -18,8 +18,39 @@ final class TouchBarRateLimitsView: NSView {
     }
 
     func update(with state: RateLimitDisplayState) {
-        fiveHourRow.update(with: state.fiveHour, usageText: state.tokenUsage?.yesterdayText)
-        weeklyRow.update(with: state.weekly, usageText: state.tokenUsage?.cumulativeText)
+        if let fiveHour = state.fiveHour {
+            fiveHourRow.isHidden = false
+            fiveHourRow.updateLimit(
+                title: "5 小时",
+                meter: fiveHour,
+                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --"
+            )
+        } else if let resetCredits = state.resetCredits, resetCredits.availableCount > 0 {
+            fiveHourRow.isHidden = false
+            fiveHourRow.updateResetCredits(
+                resetCredits,
+                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --"
+            )
+        } else if state.lastUpdated != nil {
+            fiveHourRow.isHidden = true
+        } else {
+            fiveHourRow.isHidden = false
+            fiveHourRow.updatePlaceholder(title: "5 小时", usageText: "昨日 --")
+        }
+
+        if let weekly = state.weekly {
+            weeklyRow.isHidden = false
+            weeklyRow.updateLimit(
+                title: "周限额",
+                meter: weekly,
+                usageText: state.tokenUsage?.cumulativeText ?? "累计 --"
+            )
+        } else if state.lastUpdated != nil {
+            weeklyRow.isHidden = true
+        } else {
+            weeklyRow.isHidden = false
+            weeklyRow.updatePlaceholder(title: "周限额", usageText: "累计 --")
+        }
     }
 
     private func configure() {
@@ -67,13 +98,30 @@ final class TouchBarRateLimitsView: NSView {
     }
 
     private static func codexIcon() -> NSImage {
-        let iconPath = "/Applications/Codex.app/Contents/Resources/icon.icns"
-        if let image = NSImage(contentsOfFile: iconPath) {
+        let iconPaths = [
+            "/Applications/ChatGPT.app/Contents/Resources/icon-codex-light.png",
+            "/Applications/ChatGPT.app/Contents/Resources/icon-codex-dark-color.png",
+            "/Applications/Codex.app/Contents/Resources/icon.icns"
+        ]
+
+        for path in iconPaths {
+            if let image = NSImage(contentsOfFile: path) {
+                image.size = NSSize(width: 30, height: 30)
+                return image
+            }
+        }
+
+        let appPaths = ["/Applications/ChatGPT.app", "/Applications/Codex.app"]
+        for path in appPaths where FileManager.default.fileExists(atPath: path) {
+            let image = NSWorkspace.shared.icon(forFile: path)
             image.size = NSSize(width: 30, height: 30)
             return image
         }
 
-        let image = NSWorkspace.shared.icon(forFile: "/Applications/Codex.app")
+        let bundledIconPath = Bundle.main.path(forResource: "AppIcon", ofType: "icns")
+        let image = bundledIconPath.flatMap(NSImage.init(contentsOfFile:))
+            ?? NSImage(systemSymbolName: "terminal.fill", accessibilityDescription: "Codex")
+            ?? NSImage(size: NSSize(width: 30, height: 30))
         image.size = NSSize(width: 30, height: 30)
         return image
     }
@@ -82,8 +130,11 @@ final class TouchBarRateLimitsView: NSView {
 private final class TouchBarLimitRow: NSView {
     private let titleLabel: NSTextField
     private let batteryBar = SegmentedBatteryBar()
+    private let creditsIndicatorLabel = NSTextField(labelWithString: "")
     private let remainingLabel = NSTextField(labelWithString: "剩余 --")
     private let resetLabel = NSTextField(labelWithString: "-- 重置")
+    private let separatorLabel = NSTextField(labelWithString: "|")
+    private let usageLabel = NSTextField(labelWithString: "--")
 
     init(title: String) {
         self.titleLabel = NSTextField(labelWithString: title)
@@ -95,21 +146,36 @@ private final class TouchBarLimitRow: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(with meter: LimitMeter?, usageText: String?) {
-        let usageText = usageText ?? defaultUsageText
-
-        guard let meter else {
-            batteryBar.remainingPercent = 0
-            batteryBar.isDimmed = true
-            remainingLabel.stringValue = "剩余 --"
-            resetLabel.stringValue = "-- 重置  |  \(usageText)"
-            return
-        }
-
+    func updateLimit(title: String, meter: LimitMeter, usageText: String) {
+        titleLabel.stringValue = title
+        batteryBar.isHidden = false
+        creditsIndicatorLabel.isHidden = true
         batteryBar.remainingPercent = meter.remainingPercent
         batteryBar.isDimmed = false
         remainingLabel.stringValue = "剩余 \(meter.remainingText)"
-        resetLabel.stringValue = "\(meter.resetText)  |  \(usageText)"
+        resetLabel.stringValue = meter.resetText
+        usageLabel.stringValue = usageText
+    }
+
+    func updateResetCredits(_ resetCredits: ResetCreditSummary, usageText: String) {
+        titleLabel.stringValue = "重置券"
+        batteryBar.isHidden = true
+        creditsIndicatorLabel.isHidden = false
+        creditsIndicatorLabel.stringValue = Self.creditIndicator(count: resetCredits.availableCount)
+        remainingLabel.stringValue = resetCredits.availableText
+        resetLabel.stringValue = resetCredits.expirationText
+        usageLabel.stringValue = usageText
+    }
+
+    func updatePlaceholder(title: String, usageText: String) {
+        titleLabel.stringValue = title
+        batteryBar.isHidden = false
+        creditsIndicatorLabel.isHidden = true
+        batteryBar.remainingPercent = 0
+        batteryBar.isDimmed = true
+        remainingLabel.stringValue = "剩余 --"
+        resetLabel.stringValue = "-- 重置"
+        usageLabel.stringValue = usageText
     }
 
     private func configure() {
@@ -119,6 +185,12 @@ private final class TouchBarLimitRow: NSView {
         titleLabel.textColor = .labelColor
         titleLabel.alignment = .left
 
+        creditsIndicatorLabel.font = .systemFont(ofSize: 9, weight: .semibold)
+        creditsIndicatorLabel.textColor = .systemTeal
+        creditsIndicatorLabel.alignment = .left
+        creditsIndicatorLabel.lineBreakMode = .byClipping
+        creditsIndicatorLabel.isHidden = true
+
         remainingLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
         remainingLabel.textColor = .labelColor
         remainingLabel.lineBreakMode = .byTruncatingTail
@@ -127,7 +199,29 @@ private final class TouchBarLimitRow: NSView {
         resetLabel.textColor = .labelColor
         resetLabel.lineBreakMode = .byTruncatingTail
 
-        let row = NSStackView(views: [titleLabel, batteryBar, remainingLabel, resetLabel])
+        separatorLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+        separatorLabel.textColor = .labelColor
+        separatorLabel.alignment = .center
+
+        usageLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+        usageLabel.textColor = .labelColor
+        usageLabel.lineBreakMode = .byTruncatingTail
+
+        let statusContainer = NSView()
+        statusContainer.translatesAutoresizingMaskIntoConstraints = false
+        batteryBar.translatesAutoresizingMaskIntoConstraints = false
+        creditsIndicatorLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusContainer.addSubview(batteryBar)
+        statusContainer.addSubview(creditsIndicatorLabel)
+
+        let row = NSStackView(views: [
+            titleLabel,
+            statusContainer,
+            remainingLabel,
+            resetLabel,
+            separatorLabel,
+            usageLabel
+        ])
         row.translatesAutoresizingMaskIntoConstraints = false
         row.orientation = .horizontal
         row.alignment = .centerY
@@ -135,16 +229,27 @@ private final class TouchBarLimitRow: NSView {
         row.spacing = 8
         row.setCustomSpacing(4, after: titleLabel)
         row.setCustomSpacing(0, after: remainingLabel)
+        row.setCustomSpacing(4, after: resetLabel)
+        row.setCustomSpacing(4, after: separatorLabel)
 
         addSubview(row)
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: 13),
             titleLabel.widthAnchor.constraint(equalToConstant: 42),
+            statusContainer.widthAnchor.constraint(equalToConstant: 175),
+            statusContainer.heightAnchor.constraint(equalToConstant: 11),
             batteryBar.widthAnchor.constraint(equalToConstant: 175),
             batteryBar.heightAnchor.constraint(equalToConstant: 11),
+            batteryBar.leadingAnchor.constraint(equalTo: statusContainer.leadingAnchor),
+            batteryBar.topAnchor.constraint(equalTo: statusContainer.topAnchor),
+            creditsIndicatorLabel.leadingAnchor.constraint(equalTo: statusContainer.leadingAnchor, constant: 5),
+            creditsIndicatorLabel.trailingAnchor.constraint(lessThanOrEqualTo: statusContainer.trailingAnchor),
+            creditsIndicatorLabel.centerYAnchor.constraint(equalTo: statusContainer.centerYAnchor),
             remainingLabel.widthAnchor.constraint(equalToConstant: 58),
-            resetLabel.widthAnchor.constraint(equalToConstant: 190),
+            resetLabel.widthAnchor.constraint(equalToConstant: 125),
+            separatorLabel.widthAnchor.constraint(equalToConstant: 8),
+            usageLabel.widthAnchor.constraint(equalToConstant: 66),
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
             row.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
             row.topAnchor.constraint(equalTo: topAnchor),
@@ -152,7 +257,10 @@ private final class TouchBarLimitRow: NSView {
         ])
     }
 
-    private var defaultUsageText: String {
-        titleLabel.stringValue == "5 小时" ? "昨日 --" : "累计 --"
+    private static func creditIndicator(count: Int) -> String {
+        if count <= 5 {
+            return Array(repeating: "●", count: max(0, count)).joined(separator: "  ")
+        }
+        return "●  × \(count)"
     }
 }

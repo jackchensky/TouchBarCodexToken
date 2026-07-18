@@ -30,7 +30,7 @@ final class CompactHUDViewController: NSViewController, NSTouchBarDelegate {
 
     override func loadView() {
         view = hudView
-        view.frame = NSRect(x: 0, y: 0, width: 226, height: 34)
+        view.frame = NSRect(x: 0, y: 0, width: 238, height: 34)
         update(with: currentState)
     }
 
@@ -84,8 +84,8 @@ final class CompactHUDViewController: NSViewController, NSTouchBarDelegate {
 final class CompactQuotaHUDView: NSView {
     weak var touchBarProvider: CompactHUDViewController?
 
-    private let fiveHourItem = CompactQuotaItemView(title: "5h")
-    private let weeklyItem = CompactQuotaItemView(title: "7d")
+    private let firstItem = CompactQuotaItemView()
+    private let secondItem = CompactQuotaItemView()
     private let refreshButton = CompactIconButton(
         symbolName: "arrow.clockwise",
         accessibilityLabel: "刷新额度"
@@ -97,6 +97,7 @@ final class CompactQuotaHUDView: NSView {
     private let onRefresh: () -> Void
     private let onQuit: () -> Void
     private var hudAppearance: HUDAppearance
+    private var widthConstraint: NSLayoutConstraint?
 
     init(initialAppearance: HUDAppearance, onRefresh: @escaping () -> Void, onQuit: @escaping () -> Void) {
         self.onRefresh = onRefresh
@@ -139,8 +140,32 @@ final class CompactQuotaHUDView: NSView {
 
     func update(with state: RateLimitDisplayState) {
         let hasError = state.errorMessage != nil && state.fiveHour == nil && state.weekly == nil
-        fiveHourItem.update(with: state.fiveHour, hasError: hasError)
-        weeklyItem.update(with: state.weekly, hasError: hasError)
+
+        if let fiveHour = state.fiveHour {
+            firstItem.update(with: fiveHour, title: "5h")
+            if let weekly = state.weekly {
+                secondItem.update(with: weekly, title: "7d")
+                setMetricCount(2)
+            } else {
+                setMetricCount(1)
+            }
+        } else if let resetCredits = state.resetCredits, resetCredits.availableCount > 0 {
+            firstItem.update(with: resetCredits)
+            if let weekly = state.weekly {
+                secondItem.update(with: weekly, title: "7d")
+                setMetricCount(2)
+            } else {
+                setMetricCount(1)
+            }
+        } else if let weekly = state.weekly {
+            firstItem.update(with: weekly, title: "7d")
+            setMetricCount(1)
+        } else {
+            firstItem.updatePlaceholder(title: "5h", hasError: hasError)
+            secondItem.updatePlaceholder(title: "7d", hasError: hasError)
+            setMetricCount(2)
+        }
+
         toolTip = state.statusText
     }
 
@@ -161,7 +186,7 @@ final class CompactQuotaHUDView: NSView {
         quitButton.target = self
         quitButton.action = #selector(quitClicked)
 
-        let stack = NSStackView(views: [fiveHourItem, weeklyItem, refreshButton, quitButton])
+        let stack = NSStackView(views: [firstItem, secondItem, refreshButton, quitButton])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.orientation = .horizontal
         stack.alignment = .centerY
@@ -170,11 +195,14 @@ final class CompactQuotaHUDView: NSView {
 
         addSubview(stack)
 
+        let widthConstraint = widthAnchor.constraint(equalToConstant: 238)
+        self.widthConstraint = widthConstraint
+
         NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: 226),
+            widthConstraint,
             heightAnchor.constraint(equalToConstant: 34),
-            fiveHourItem.widthAnchor.constraint(equalToConstant: 64),
-            weeklyItem.widthAnchor.constraint(equalToConstant: 64),
+            firstItem.widthAnchor.constraint(equalToConstant: 70),
+            secondItem.widthAnchor.constraint(equalToConstant: 70),
             refreshButton.widthAnchor.constraint(equalToConstant: 20),
             refreshButton.heightAnchor.constraint(equalToConstant: 20),
             quitButton.widthAnchor.constraint(equalToConstant: 20),
@@ -183,6 +211,29 @@ final class CompactQuotaHUDView: NSView {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+    }
+
+    private func setMetricCount(_ count: Int) {
+        let showsSecondItem = count > 1
+        secondItem.isHidden = !showsSecondItem
+
+        let targetWidth: CGFloat = showsSecondItem ? 238 : 160
+        guard widthConstraint?.constant != targetWidth else {
+            return
+        }
+
+        widthConstraint?.constant = targetWidth
+
+        guard let window else {
+            frame.size.width = targetWidth
+            return
+        }
+
+        let previousMidX = window.frame.midX
+        window.setContentSize(NSSize(width: targetWidth, height: 34))
+        var origin = window.frame.origin
+        origin.x = previousMidX - window.frame.width / 2
+        window.setFrameOrigin(origin)
     }
 
     @objc private func refreshClicked() {
@@ -197,10 +248,8 @@ final class CompactQuotaHUDView: NSView {
 private final class CompactQuotaItemView: NSView {
     private let dotView = CompactStatusDotView()
     private let label = NSTextField(labelWithString: "-- --")
-    private let title: String
 
-    init(title: String) {
-        self.title = title
+    init() {
         super.init(frame: .zero)
         configure()
     }
@@ -209,18 +258,23 @@ private final class CompactQuotaItemView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(with meter: LimitMeter?, hasError: Bool) {
-        guard let meter else {
-            label.stringValue = "\(title) --"
-            label.textColor = NSColor.white.withAlphaComponent(0.62)
-            dotView.color = hasError ? NSColor.systemRed : NSColor.white.withAlphaComponent(0.28)
-            return
-        }
-
+    func update(with meter: LimitMeter, title: String) {
         let remaining = Int(meter.remainingPercent.rounded())
         label.stringValue = "\(title) \(remaining)%"
         label.textColor = .white
         dotView.color = color(for: remaining)
+    }
+
+    func update(with resetCredits: ResetCreditSummary) {
+        label.stringValue = resetCredits.compactText
+        label.textColor = .white
+        dotView.color = .systemTeal
+    }
+
+    func updatePlaceholder(title: String, hasError: Bool) {
+        label.stringValue = "\(title) --"
+        label.textColor = NSColor.white.withAlphaComponent(0.62)
+        dotView.color = hasError ? NSColor.systemRed : NSColor.white.withAlphaComponent(0.28)
     }
 
     private func configure() {
