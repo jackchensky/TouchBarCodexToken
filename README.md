@@ -11,7 +11,7 @@ Touch Bar 清晰细节：
 它不抓网页，也不需要你填写 API Key。应用会自动查找 ChatGPT 合并版或旧版 Codex 中的本机 `codex`：
 
 ```bash
-/Applications/ChatGPT.app/Contents/Resources/codex app-server --listen stdio://
+/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex app-server --listen stdio://
 # 或旧版
 /Applications/Codex.app/Contents/Resources/codex app-server --listen stdio://
 ```
@@ -97,7 +97,7 @@ Touch Bar 内容包括：
 - 剩余百分比。
 - 重置时间。
 - 本地 token 消耗统计：`昨日` 和 `累计`。
-- 只有周额度时，第二行单独显示剩余额度点数，例如 `还剩点数：US$147.56`；两种额度窗口都存在时，点数跟随第二行周额度显示。余额为 0 或接口未返回点数时自动隐藏。
+- 只有周额度时，第二行单独显示剩余额度点数，例如 `还剩点数：US$147.56`；两种额度窗口都存在时，点数跟随第二行周额度显示。余额为 0 时显示 `US$0.00`，只有接口未返回点数时才隐藏。
 
 注意：macOS 的公开 Touch Bar API 与当前前台 App / first responder 绑定。切回 Codex 输入后，Touch Bar 可能会被 Codex 自己接管，这是系统限制。
 
@@ -215,6 +215,17 @@ scripts/make-app-icon.py
 脚本会为 Finder 列表视图常用的小尺寸层生成专门的简化图标，并用标准 ICNS 写入器输出，避免小图标被直接缩小或被系统读成杂色噪点。
 
 ## 更新记录
+
+### 0.1.14 - 2026-09-28
+
+- 适配新版 ChatGPT `26.924.22138` 调整后的内置 Codex CLI 路径：`Contents/Resources/codex-cli/bin/codex`。
+- 同时保留旧版 `Contents/Resources/codex` 路径兼容，不影响尚未升级的 ChatGPT/Codex。
+- 增加按 App Bundle 标识查找 ChatGPT 的后备方式，应用不在标准名称或位置时也可尝试定位 app-server。
+- 已确认新版 app-server 的 `account/rateLimits/read` 协议和额度字段仍兼容，数据消失并非额度接口下线。
+- Touch Bar 在昨日 token 数据右侧增加 `| 重置：N次`，数据缺失时显示占位，已读取但无重置次数时显示 `重置：0次`。
+- Touch Bar 在累计 token 数据右侧增加 `| 金额：XX.XX刀`，余额为零时固定显示 `金额：0.00刀`。
+- 两行新增独立分隔线与固定宽度尾部列，保证 `|`、`重置` 和 `金额` 在数值变化时仍上下对齐。
+- 应用版本更新为 `0.1.14`，Build `15`，已完成 Release 构建、重启和新版 app-server 进程验证。
 
 ### 0.1.13 - 2026-08-27
 

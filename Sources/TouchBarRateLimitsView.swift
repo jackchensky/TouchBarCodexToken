@@ -20,6 +20,15 @@ final class TouchBarRateLimitsView: NSView {
 
     func update(with state: RateLimitDisplayState) {
         var hasLeadingLimitRow = false
+        let resetCountText: String
+        if let resetCredits = state.resetCredits {
+            resetCountText = resetCredits.touchBarText
+        } else if state.lastUpdated != nil {
+            resetCountText = "重置：0次"
+        } else {
+            resetCountText = "重置：--"
+        }
+        let amountText = state.creditBalance?.touchBarAmountText
 
         if let fiveHour = state.fiveHour {
             fiveHourRow.isHidden = false
@@ -27,20 +36,26 @@ final class TouchBarRateLimitsView: NSView {
             fiveHourRow.updateLimit(
                 title: "5 小时",
                 meter: fiveHour,
-                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --"
+                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --",
+                trailingText: resetCountText
             )
         } else if let resetCredits = state.resetCredits, resetCredits.availableCount > 0 {
             fiveHourRow.isHidden = false
             hasLeadingLimitRow = true
             fiveHourRow.updateResetCredits(
                 resetCredits,
-                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --"
+                usageText: state.tokenUsage?.yesterdayText ?? "昨日 --",
+                trailingText: resetCountText
             )
         } else if state.lastUpdated != nil {
             fiveHourRow.isHidden = true
         } else {
             fiveHourRow.isHidden = false
-            fiveHourRow.updatePlaceholder(title: "5 小时", usageText: "昨日 --")
+            fiveHourRow.updatePlaceholder(
+                title: "5 小时",
+                usageText: "昨日 --",
+                trailingText: resetCountText
+            )
         }
 
         creditBalanceRow.isHidden = true
@@ -51,22 +66,22 @@ final class TouchBarRateLimitsView: NSView {
                 title: "周限额",
                 meter: weekly,
                 usageText: state.tokenUsage?.cumulativeText ?? "累计 --",
-                creditBalanceText: hasLeadingLimitRow ? state.creditBalance?.displayText : nil
+                trailingText: hasLeadingLimitRow ? amountText : resetCountText
             )
 
-            if !hasLeadingLimitRow, let balanceText = state.creditBalance?.displayText {
+            if !hasLeadingLimitRow, let balanceText = amountText {
                 creditBalanceRow.update(text: balanceText)
                 creditBalanceRow.isHidden = false
             }
         } else if state.lastUpdated != nil {
             weeklyRow.isHidden = true
-            if let balanceText = state.creditBalance?.displayText {
+            if let balanceText = amountText {
                 creditBalanceRow.update(text: balanceText)
                 creditBalanceRow.isHidden = false
             }
         } else {
             weeklyRow.isHidden = false
-            weeklyRow.updatePlaceholder(title: "周限额", usageText: "累计 --")
+            weeklyRow.updatePlaceholder(title: "周限额", usageText: "累计 --", trailingText: nil)
         }
     }
 
@@ -192,8 +207,8 @@ private final class TouchBarLimitRow: NSView {
     private let resetLabel = NSTextField(labelWithString: "-- 重置")
     private let separatorLabel = NSTextField(labelWithString: "|")
     private let usageLabel = NSTextField(labelWithString: "--")
-    private let creditSeparatorLabel = NSTextField(labelWithString: "|")
-    private let creditBalanceLabel = NSTextField(labelWithString: "")
+    private let trailingSeparatorLabel = NSTextField(labelWithString: "|")
+    private let trailingLabel = NSTextField(labelWithString: "")
 
     init(title: String) {
         self.titleLabel = NSTextField(labelWithString: title)
@@ -209,7 +224,7 @@ private final class TouchBarLimitRow: NSView {
         title: String,
         meter: LimitMeter,
         usageText: String,
-        creditBalanceText: String? = nil
+        trailingText: String?
     ) {
         titleLabel.stringValue = title
         batteryBar.isHidden = false
@@ -219,10 +234,14 @@ private final class TouchBarLimitRow: NSView {
         remainingLabel.stringValue = "剩余 \(meter.remainingText)"
         resetLabel.stringValue = meter.resetText
         usageLabel.stringValue = usageText
-        updateCreditBalance(creditBalanceText)
+        updateTrailingText(trailingText)
     }
 
-    func updateResetCredits(_ resetCredits: ResetCreditSummary, usageText: String) {
+    func updateResetCredits(
+        _ resetCredits: ResetCreditSummary,
+        usageText: String,
+        trailingText: String?
+    ) {
         titleLabel.stringValue = "重置券"
         batteryBar.isHidden = true
         creditsIndicatorLabel.isHidden = false
@@ -230,10 +249,10 @@ private final class TouchBarLimitRow: NSView {
         remainingLabel.stringValue = resetCredits.availableText
         resetLabel.stringValue = resetCredits.expirationText
         usageLabel.stringValue = usageText
-        updateCreditBalance(nil)
+        updateTrailingText(trailingText)
     }
 
-    func updatePlaceholder(title: String, usageText: String) {
+    func updatePlaceholder(title: String, usageText: String, trailingText: String?) {
         titleLabel.stringValue = title
         batteryBar.isHidden = false
         creditsIndicatorLabel.isHidden = true
@@ -242,7 +261,7 @@ private final class TouchBarLimitRow: NSView {
         remainingLabel.stringValue = "剩余 --"
         resetLabel.stringValue = "-- 重置"
         usageLabel.stringValue = usageText
-        updateCreditBalance(nil)
+        updateTrailingText(trailingText)
     }
 
     private func configure() {
@@ -274,16 +293,16 @@ private final class TouchBarLimitRow: NSView {
         usageLabel.textColor = .labelColor
         usageLabel.lineBreakMode = .byTruncatingTail
 
-        creditSeparatorLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
-        creditSeparatorLabel.textColor = .labelColor
-        creditSeparatorLabel.alignment = .center
-        creditSeparatorLabel.isHidden = true
+        trailingSeparatorLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+        trailingSeparatorLabel.textColor = .labelColor
+        trailingSeparatorLabel.alignment = .center
+        trailingSeparatorLabel.isHidden = true
 
-        creditBalanceLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
-        creditBalanceLabel.textColor = .labelColor
-        creditBalanceLabel.lineBreakMode = .byClipping
-        creditBalanceLabel.isHidden = true
-        creditBalanceLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        trailingLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+        trailingLabel.textColor = .labelColor
+        trailingLabel.lineBreakMode = .byClipping
+        trailingLabel.isHidden = true
+        trailingLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         let statusContainer = NSView()
         statusContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -299,8 +318,8 @@ private final class TouchBarLimitRow: NSView {
             resetLabel,
             separatorLabel,
             usageLabel,
-            creditSeparatorLabel,
-            creditBalanceLabel
+            trailingSeparatorLabel,
+            trailingLabel
         ])
         row.translatesAutoresizingMaskIntoConstraints = false
         row.orientation = .horizontal
@@ -312,7 +331,7 @@ private final class TouchBarLimitRow: NSView {
         row.setCustomSpacing(4, after: resetLabel)
         row.setCustomSpacing(4, after: separatorLabel)
         row.setCustomSpacing(4, after: usageLabel)
-        row.setCustomSpacing(4, after: creditSeparatorLabel)
+        row.setCustomSpacing(4, after: trailingSeparatorLabel)
 
         addSubview(row)
 
@@ -335,6 +354,8 @@ private final class TouchBarLimitRow: NSView {
             resetLabel.widthAnchor.constraint(equalToConstant: 125),
             separatorLabel.widthAnchor.constraint(equalToConstant: 8),
             usageLabel.widthAnchor.constraint(equalToConstant: 66),
+            trailingSeparatorLabel.widthAnchor.constraint(equalToConstant: 8),
+            trailingLabel.widthAnchor.constraint(equalToConstant: 96),
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
             row.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
             row.topAnchor.constraint(equalTo: topAnchor),
@@ -349,10 +370,10 @@ private final class TouchBarLimitRow: NSView {
         return "●  × \(count)"
     }
 
-    private func updateCreditBalance(_ text: String?) {
+    private func updateTrailingText(_ text: String?) {
         let shouldShow = text?.isEmpty == false
-        creditSeparatorLabel.isHidden = !shouldShow
-        creditBalanceLabel.isHidden = !shouldShow
-        creditBalanceLabel.stringValue = text ?? ""
+        trailingSeparatorLabel.isHidden = !shouldShow
+        trailingLabel.isHidden = !shouldShow
+        trailingLabel.stringValue = text ?? ""
     }
 }

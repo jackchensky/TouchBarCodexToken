@@ -1,14 +1,14 @@
 # PROJECT_STATUS
 
-最后更新：2026-08-27
+最后更新：2026-09-28
 
 ## 项目概况
 
 TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch Bar 小工具。应用通过本机 ChatGPT/Codex 包内的 `codex app-server` 调用 `account/rateLimits/read`，显示额度窗口、可用重置次数、额度点数和本地 token 用量。
 
 - 当前分支：`main`
-- 当前版本：`0.1.13`，Build `14`
-- GitHub `main` 版本：`0.1.13`（2026-08-27）
+- 当前版本：`0.1.14`，Build `15`（构建和运行验证通过）
+- GitHub `main` 版本：`0.1.14`（2026-09-28）
 - 最近正式标签：`v0.1.4`
 
 ## 已完成
@@ -20,6 +20,16 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 - 刷新失败时保留旧额度数据，本地 token 用量在后台读取。
 - 重置时间使用双位 `MM月dd日 HH:mm` 格式。
 - HUD 双额度宽度已从 `238px` 调整为 `250px`，单个额度项从 `70px` 调整为 `76px`，避免 `5h 100%` 的百分号被裁切。
+
+## 0.1.14 更新
+
+- 诊断确认 ChatGPT `26.924.22138` 将内置 Codex CLI 从 `Contents/Resources/codex` 移至 `Contents/Resources/codex-cli/bin/codex`，旧路径失效导致 app-server 无法启动、额度数据为空。
+- app-server 客户端现同时兼容新旧两种相对路径，并通过 `com.openai.codex` / `com.openai.chatgpt` Bundle 标识补充查找宿主 App。
+- 已直接调用新版 `codex-cli 0.158.0-alpha.2.1` 验证 `account/rateLimits/read`，5 小时、周额度、重置次数和点数字段结构保持兼容。
+- README 已更新新版命令路径与 0.1.14 说明。
+- Release 构建已通过；重启后已确认额度条主进程成功拉起新版路径下的 app-server。
+- Touch Bar 两行 token 数据右侧新增固定尾部列：第一行显示 `| 重置：N次`，第二行显示 `| 金额：XX.XX刀`；余额为零时也显示 `金额：0.00刀`。
+- 新尾部列已完成 Release 构建并重启本地 App；两行分隔线和文字使用固定宽度约束，待实体 Touch Bar 目视确认最终间距。
 
 ## 0.1.6 更新
 
@@ -103,13 +113,13 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 - `git diff --check`：通过。
 - `scripts/build-app.sh`：通过，生成 `build/TouchBarCodexToken.app`。
 - SwiftPM 会因本机 Command Line Tools 的 `PlatformPath` 探测问题失败，构建脚本会自动使用 `swiftc -sdk` 后备路径并成功完成构建。
-- `TouchBarCodexToken` 主进程和 `/Applications/ChatGPT.app/Contents/Resources/codex app-server --listen stdio://` 子进程已成功运行。
+- `TouchBarCodexToken` 主进程和 `/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex app-server --listen stdio://` 子进程已成功运行。
 - 已用当前“只返回周额度”的接口结构验证动态分类逻辑。
 - Touch Bar 最终图标、文字间距和分隔线仍应在实体 Touch Bar 上做一次目视确认。
 
 ## 未解决和注意事项
 
-- `0.1.13` 尚未创建 Git 标签、DMG 或 GitHub Release。
+- `0.1.14` 尚未创建 Git 标签、DMG 或 GitHub Release。
 - 项目目前没有自动化测试，额度接口结构变化主要依赖本机 app-server 和实体 Touch Bar 验证。
 - App 尚未使用 Apple Developer 证书签名和公证，公开分发时仍可能出现 macOS 安全提示。
 - 以下 Marketing 文件是未跟踪草稿，除非明确要求，否则不要加入提交：
@@ -121,7 +131,7 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 ## 建议下一步
 
 1. 在实体 Touch Bar 上继续观察白底 Codex 图标、重置券行和两行 `|` 分隔线在不同额度值下的对齐情况。
-2. 按需要创建 `v0.1.13` 标签、DMG 和 GitHub Release。
+2. 按需要为 `0.1.14` 创建标签、DMG 和 GitHub Release。
 3. 后续 app-server 返回结构变化时，优先检查额度窗口时长和重置券字段。
 
 ## 常用命令

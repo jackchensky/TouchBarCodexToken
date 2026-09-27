@@ -125,6 +125,14 @@ struct CreditBalanceSummary: Equatable {
     let balance: Decimal
 
     var displayText: String {
+        "还剩点数：US$\(formattedBalance)"
+    }
+
+    var touchBarAmountText: String {
+        "金额：\(formattedBalance)刀"
+    }
+
+    private var formattedBalance: String {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.numberStyle = .decimal
@@ -132,17 +140,15 @@ struct CreditBalanceSummary: Equatable {
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
 
-        let value = formatter.string(from: NSDecimalNumber(decimal: balance)) ?? "0.00"
-        return "还剩点数：US$\(value)"
+        return formatter.string(from: NSDecimalNumber(decimal: balance)) ?? "0.00"
     }
 
     init?(response: CreditsSnapshot) {
         guard
-            response.hasCredits,
             !response.unlimited,
             let rawBalance = response.balance,
             let balance = Decimal(string: rawBalance, locale: Locale(identifier: "en_US_POSIX")),
-            balance > 0
+            balance >= 0
         else {
             return nil
         }
@@ -157,6 +163,10 @@ struct ResetCreditSummary: Equatable {
 
     var compactText: String {
         "重置 \(availableCount)次"
+    }
+
+    var touchBarText: String {
+        "重置：\(availableCount)次"
     }
 
     var availableText: String {

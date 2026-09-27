@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum CodexAppServerError: LocalizedError {
@@ -23,11 +24,14 @@ enum CodexAppServerError: LocalizedError {
 final class CodexAppServerClient {
     typealias JSONDictionary = [String: Any]
 
-    private let codexCandidates = [
-        "/Applications/ChatGPT.app/Contents/Resources/codex",
-        "/Applications/Codex.app/Contents/Resources/codex",
-        "/Applications/GPT.app/Contents/Resources/codex"
-    ].map(URL.init(fileURLWithPath:))
+    private let knownAppURLs = ["ChatGPT", "Codex", "GPT"].map {
+        URL(fileURLWithPath: "/Applications/\($0).app", isDirectory: true)
+    }
+    private let hostBundleIdentifiers = ["com.openai.codex", "com.openai.chatgpt"]
+    private let codexRelativePaths = [
+        "Contents/Resources/codex-cli/bin/codex",
+        "Contents/Resources/codex"
+    ]
     private let queue = DispatchQueue(label: "TouchBarCodexToken.CodexAppServerClient")
 
     private var process: Process?
@@ -94,7 +98,7 @@ final class CodexAppServerClient {
     }
 
     private func launchProcess() throws {
-        guard let codexURL = codexCandidates.first(where: {
+        guard let codexURL = codexCandidates().first(where: {
             FileManager.default.isExecutableFile(atPath: $0.path)
         }) else {
             throw CodexAppServerError.processUnavailable
@@ -137,6 +141,23 @@ final class CodexAppServerClient {
         self.inputPipe = inputPipe
         self.outputPipe = outputPipe
         self.errorPipe = errorPipe
+    }
+
+    private func codexCandidates() -> [URL] {
+        var appURLs = knownAppURLs
+
+        for bundleIdentifier in hostBundleIdentifiers {
+            guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
+                continue
+            }
+            if !appURLs.contains(appURL) {
+                appURLs.insert(appURL, at: 0)
+            }
+        }
+
+        return appURLs.flatMap { appURL in
+            codexRelativePaths.map { appURL.appendingPathComponent($0) }
+        }
     }
 
     private func initialize(completion: @escaping (Result<Void, Error>) -> Void) {
