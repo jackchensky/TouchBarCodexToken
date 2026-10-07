@@ -28,7 +28,7 @@ final class TouchBarRateLimitsView: NSView {
         } else {
             resetCountText = "重置：--"
         }
-        let amountText = state.creditBalance?.touchBarAmountText
+        let creditText = state.creditBalance?.touchBarCreditText
 
         if let fiveHour = state.fiveHour {
             fiveHourRow.isHidden = false
@@ -66,16 +66,16 @@ final class TouchBarRateLimitsView: NSView {
                 title: "周限额",
                 meter: weekly,
                 usageText: state.tokenUsage?.cumulativeText ?? "累计 --",
-                trailingText: hasLeadingLimitRow ? amountText : resetCountText
+                trailingText: hasLeadingLimitRow ? creditText : resetCountText
             )
 
-            if !hasLeadingLimitRow, let balanceText = amountText {
+            if !hasLeadingLimitRow, let balanceText = creditText {
                 creditBalanceRow.update(text: balanceText)
                 creditBalanceRow.isHidden = false
             }
         } else if state.lastUpdated != nil {
             weeklyRow.isHidden = true
-            if let balanceText = amountText {
+            if let balanceText = creditText {
                 creditBalanceRow.update(text: balanceText)
                 creditBalanceRow.isHidden = false
             }

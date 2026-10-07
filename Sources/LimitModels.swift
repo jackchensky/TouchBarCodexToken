@@ -125,11 +125,11 @@ struct CreditBalanceSummary: Equatable {
     let balance: Decimal
 
     var displayText: String {
-        "还剩点数：US$\(formattedBalance)"
+        "额度：\(formattedBalance)"
     }
 
-    var touchBarAmountText: String {
-        "金额：\(formattedBalance)刀"
+    var touchBarCreditText: String {
+        "额度：\(formattedBalance)"
     }
 
     private var formattedBalance: String {

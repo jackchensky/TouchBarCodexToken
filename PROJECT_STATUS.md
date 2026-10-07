@@ -1,14 +1,14 @@
 # PROJECT_STATUS
 
-最后更新：2026-09-28
+最后更新：2026-10-07
 
 ## 项目概况
 
 TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch Bar 小工具。应用通过本机 ChatGPT/Codex 包内的 `codex app-server` 调用 `account/rateLimits/read`，显示额度窗口、可用重置次数、额度点数和本地 token 用量。
 
 - 当前分支：`main`
-- 当前版本：`0.1.14`，Build `15`（构建和运行验证通过）
-- GitHub `main` 版本：`0.1.14`（2026-09-28）
+- 当前版本：`0.1.15`，Build `16`（构建和运行验证通过）
+- GitHub `main` 版本：`0.1.15`（2026-10-07）
 - 最近正式标签：`v0.1.4`
 
 ## 已完成
@@ -21,6 +21,13 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 - 重置时间使用双位 `MM月dd日 HH:mm` 格式。
 - HUD 双额度宽度已从 `238px` 调整为 `250px`，单个额度项从 `70px` 调整为 `76px`，避免 `5h 100%` 的百分号被裁切。
 
+## 0.1.15 更新
+
+- 对照当前 ChatGPT 设置和 OpenAI 官方说明，确认推荐奖励属于使用额度，不应标记为美元金额。
+- 已直接调用 ChatGPT 内置 `codex-cli 0.158.0-alpha.2.1` 验证 `account/rateLimits/read`：`credits.balance` 仍为数值字符串，响应中没有币种字段。
+- Touch Bar 尾部由 `金额：XX.XX刀` 改为 `额度：XX.XX`，只有周额度时的独立第二行也统一为 `额度：XX.XX`。
+- 版本更新为 `0.1.15`，Build `16`；Release 构建、本机重启和新版 app-server 进程验证通过，并已提交推送到 `main`。
+
 ## 0.1.14 更新
 
 - 诊断确认 ChatGPT `26.924.22138` 将内置 Codex CLI 从 `Contents/Resources/codex` 移至 `Contents/Resources/codex-cli/bin/codex`，旧路径失效导致 app-server 无法启动、额度数据为空。
@@ -30,6 +37,10 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 - Release 构建已通过；重启后已确认额度条主进程成功拉起新版路径下的 app-server。
 - Touch Bar 两行 token 数据右侧新增固定尾部列：第一行显示 `| 重置：N次`，第二行显示 `| 金额：XX.XX刀`；余额为零时也显示 `金额：0.00刀`。
 - 新尾部列已完成 Release 构建并重启本地 App；两行分隔线和文字使用固定宽度约束，待实体 Touch Bar 目视确认最终间距。
+- 已为 0.1.14 小红书更新帖生成美化后的 Touch Bar 实拍、同系列竖版封面和配套文案，文件位于 `Marketing/xhs-v014-*`，尚未提交或推送。
+- 小红书正文已补充获取方式，明确最新源码位置、构建命令、系统兼容性，以及 0.1.14 尚无签名 DMG 的现状。
+- 小红书正文已从超长版本压缩为 1000 字限制内的发布版，保留 vibe coding、核心功能、版本变化和获取方式。
+- 已完成小红书低流量风险排查：正文移除 GitHub 定向搜索、下载源码、运行脚本、未签名 DMG 和右键绕过提示等高风险站外导流/软件分发表述，并补充 AI 辅助说明。
 
 ## 0.1.6 更新
 
@@ -127,11 +138,14 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
   - `Marketing/promo-style-b-warm-fresh.png`
   - `Marketing/promo-style-c-editorial-clean.png`
   - `Marketing/promo-style-d-tech-board-v2.png`
+  - `Marketing/xhs-v014-cover-update.png`
+  - `Marketing/xhs-v014-post-copy.md`
+  - `Marketing/xhs-v014-touchbar-photo-enhanced.png`
 
 ## 建议下一步
 
 1. 在实体 Touch Bar 上继续观察白底 Codex 图标、重置券行和两行 `|` 分隔线在不同额度值下的对齐情况。
-2. 按需要为 `0.1.14` 创建标签、DMG 和 GitHub Release。
+2. 按需要为 `0.1.15` 创建 Git 标签、DMG 和 GitHub Release。
 3. 后续 app-server 返回结构变化时，优先检查额度窗口时长和重置券字段。
 
 ## 常用命令
