@@ -7,8 +7,8 @@
 TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch Bar 小工具。应用通过本机 ChatGPT/Codex 包内的 `codex app-server` 调用 `account/rateLimits/read`，显示额度窗口、可用重置次数、额度点数和本地 token 用量。
 
 - 当前分支：`main`
-- 当前版本：`0.1.15`，Build `16`（构建和运行验证通过）
-- GitHub `main` 版本：`0.1.15`（2026-10-07）
+- 当前版本：`0.1.16`，Build `17`（构建和运行验证通过）
+- GitHub `main` 版本：`0.1.16`（2026-10-07）
 - 最近正式标签：`v0.1.4`
 
 ## 已完成
@@ -20,6 +20,12 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 - 刷新失败时保留旧额度数据，本地 token 用量在后台读取。
 - 重置时间使用双位 `MM月dd日 HH:mm` 格式。
 - HUD 双额度宽度已从 `238px` 调整为 `250px`，单个额度项从 `70px` 调整为 `76px`，避免 `5h 100%` 的百分号被裁切。
+
+## 0.1.16 更新
+
+- Touch Bar 的 token 用量固定列由 `66px` 加宽至 `80px`，避免 `昨日 1099 万` 等较长内容被截断成省略号。
+- 5 小时和周额度两行共用相同列宽，右侧 `|`、`重置` 和 `额度` 继续上下对齐。
+- 版本更新为 `0.1.16`，Build `17`；Release 构建、本机重启和新版 app-server 进程验证通过，并已提交推送到 `main`。
 
 ## 0.1.15 更新
 
@@ -145,7 +151,7 @@ TouchBarCodexToken 是一个 Swift/AppKit macOS 菜单栏、桌面 HUD 和 Touch
 ## 建议下一步
 
 1. 在实体 Touch Bar 上继续观察白底 Codex 图标、重置券行和两行 `|` 分隔线在不同额度值下的对齐情况。
-2. 按需要为 `0.1.15` 创建 Git 标签、DMG 和 GitHub Release。
+2. 按需要为 `0.1.16` 创建 Git 标签、DMG 和 GitHub Release。
 3. 后续 app-server 返回结构变化时，优先检查额度窗口时长和重置券字段。
 
 ## 常用命令

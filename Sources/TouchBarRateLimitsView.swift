@@ -353,7 +353,7 @@ private final class TouchBarLimitRow: NSView {
             remainingLabel.widthAnchor.constraint(equalToConstant: 58),
             resetLabel.widthAnchor.constraint(equalToConstant: 125),
             separatorLabel.widthAnchor.constraint(equalToConstant: 8),
-            usageLabel.widthAnchor.constraint(equalToConstant: 66),
+            usageLabel.widthAnchor.constraint(equalToConstant: 80),
             trailingSeparatorLabel.widthAnchor.constraint(equalToConstant: 8),
             trailingLabel.widthAnchor.constraint(equalToConstant: 96),
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
