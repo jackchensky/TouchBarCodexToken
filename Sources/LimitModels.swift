@@ -205,7 +205,7 @@ struct TokenUsageSummary: Equatable {
     let cumulativeTokens: Int
 
     var yesterdayText: String {
-        "昨日 \(Self.formatAsWan(yesterdayTokens))"
+        "昨日 \(Self.formatAdaptive(yesterdayTokens))"
     }
 
     var cumulativeText: String {
@@ -215,6 +215,10 @@ struct TokenUsageSummary: Equatable {
     private static func formatAsWan(_ tokens: Int) -> String {
         let value = Double(tokens) / 10_000
         return "\(formatted(value)) 万"
+    }
+
+    private static func formatAdaptive(_ tokens: Int) -> String {
+        tokens >= 100_000_000 ? formatAsYi(tokens) : formatAsWan(tokens)
     }
 
     private static func formatAsYi(_ tokens: Int) -> String {
